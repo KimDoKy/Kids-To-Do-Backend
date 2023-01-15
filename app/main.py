@@ -6,6 +6,7 @@ from app.db import database, User, Mission, Board
 from app.auth import *
 
 from copy import deepcopy
+import datetime
 
 app = FastAPI(title="FastAPI, Docker")
 
@@ -146,6 +147,7 @@ async def get_board_detail(board_id: int, token: str = Depends(oauth2_bearer)):
 @app.put("/board/{board_id}/", response_model=ResponseBoard)
 async def update_board(board_id: int, board: RequestBoard, token: str = Depends(oauth2_bearer)):
     board_obj = await Board.objects.get(pk=board_id)
+    board_obj.updated_at = datetime.datetime.now()
     return await board_obj.update(**board.dict())
 
 @app.delete("/board/{board_id}/")
