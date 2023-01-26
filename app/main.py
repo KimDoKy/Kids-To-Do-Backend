@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
 from ormar.exceptions import NoMatch
+from starlette.middleware.cors import CORSMiddleware
 
 from app.db import database, User, Mission, Board
 from app.auth import *
@@ -9,6 +10,19 @@ from copy import deepcopy
 import datetime
 
 app = FastAPI(title="FastAPI, Docker")
+
+origins = [
+    "localhost",
+    "localhost:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 RequestUser = User.get_pydantic(exclude={
     "id":..., "active":..., "missions":..., "boards":...})
