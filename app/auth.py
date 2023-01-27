@@ -17,8 +17,8 @@ def get_password_hash(password):
 def verify_password(plain_password, hashed_password):
     return bcrypt_context.verify(plain_password, hashed_password)
 
-async def authenticate_user(username: str, password: str):
-    user = await User.objects.get(username=username)
+async def authenticate_user(email: str, password: str):
+    user = await User.objects.get(email=email)
     if not user:
         return False
     if not verify_password(password, user.password):

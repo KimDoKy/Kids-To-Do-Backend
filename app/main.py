@@ -55,10 +55,11 @@ async def shutdown():
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     status_code = 400
     try:
-        user = await authenticate_user(form_data.username, form_data.password)
+        email = form_data.username
+        user = await authenticate_user(email, form_data.password)
         if not user:
             raise
-        token = create_access_token(user.username, user.id)
+        token = create_access_token(user.email, user.id)
         status_code = 200
         content = dict(Authorization=f"Bearer {token}")
     except:
