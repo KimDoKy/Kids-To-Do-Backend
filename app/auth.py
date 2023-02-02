@@ -40,11 +40,11 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta = 
 async def get_current_user(token: str = Depends(oauth2_bearer)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        email: str = payload.get("sub")
         user_id: int = payload.get("id")
-        if username is None or user_id is None:
+        if email is None or user_id is None:
             raise get_user_exception()
-        user = User.objects.filter(username=username).filter(id=user_id).first()
+        user = User.objects.filter(email=email).filter(id=user_id).first()
         return await user
     except JWTError:
         raise get_user_exception()
@@ -64,4 +64,3 @@ def token_exception():
         headers={"WWW-Authenticate": "Bearer"}
     )
     return token_exception_response
-

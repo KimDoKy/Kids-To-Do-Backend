@@ -81,11 +81,15 @@ async def register(user: RequestUser):
 
 @app.get("/missions/", response_model=list[ResponseMission])
 async def get_mission_list(token: str = Depends(oauth2_bearer)):
-    user = await get_current_user(token)
-    missions = await Mission.objects.filter(owner=user).all()
-    if len(missions) == 0:
-        return []
-    return missions
+    try:
+        user = await get_current_user(token)
+        missions = await Mission.objects.filter(owner=user).all()
+        if len(missions) == 0:
+            return []
+        return missions
+    except Exception as e:
+        content = {'message': e.detail}
+        return JSONResponse(status_code=400, content=content)
 
 @app.post("/missions/", response_model=ResponseMission)
 async def create_mission(mission: RequestMission, token: str = Depends(oauth2_bearer)):
