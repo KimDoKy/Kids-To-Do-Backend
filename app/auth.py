@@ -4,9 +4,13 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from app.db import User
 from jose import jwt, JWTError
+import jose
 
-SECRET_KEY = "test908234Secret091Key"
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_MINUTES = 30
 ALGORITHM = "HS256"
+JWT_SECRET_KEY = "test908234Secret091Key"
+JWT_REFRESH_SECRET_KEY = "RefreshSecret091Key"
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="login")
@@ -28,18 +32,29 @@ async def authenticate_user(email: str, password: str):
 def get_users(db: User, user_id: int):
     return db.objects.filter(User.id == user_id).first()
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta = None):
+def create_token(username: str, user_id: int, expires_delta: timedelta = None, token_type: str = "access"):
+    if token_type == "access":
+        expire_minues = ACCESS_TOKEN_EXPIRE_MINUTES
+        secret_key = JWT_SECRET_KEY
+    elif token_type == "refresh":
+        expire_minues = ACCESS_TOKEN_EXPIRE_MINUTES
+        secret_key = JWT_REFRESH_SECRET_KEY
+
     encode = {"sub": username, "id": user_id}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=expire_minues)
     encode.update({"exp": expire})
-    return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(encode, secret_key, algorithm=ALGORITHM)
 
-async def get_current_user(token: str = Depends(oauth2_bearer)):
+async def get_current_user(token: str = Depends(oauth2_bearer), token_type:str = "access"):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        secret_key = JWT_SECRET_KEY
+        if token_type == "refresh":
+            secret_key = JWT_REFRESH_SECRET_KEY
+
+        payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         user_id: int = payload.get("id")
         if email is None or user_id is None:

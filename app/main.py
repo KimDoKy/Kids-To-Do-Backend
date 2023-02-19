@@ -59,11 +59,35 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         user = await authenticate_user(email, form_data.password)
         if not user:
             raise
-        token = create_access_token(user.email, user.id)
+        token = create_token(user.email, user.id, token_type="access")
+        refresh_token = create_token(user.email, user.id, token_type="refresh")
         status_code = 200
-        content = dict(Authorization=f"Bearer {token}")
-    except:
+        content = {
+            "access_token": token,
+            "refresh_token": refresh_token
+            }
+    except Exception as e:
+        print('e: ', e)
         content = dict(message="no match user")
+    return JSONResponse(status_code=status_code, content=content)
+
+@app.post("/refresh-token")
+async def refresh_jwt(token: str = Depends(oauth2_bearer)):
+    try:
+        user = await get_current_user(token, token_type="refresh")
+        if not user:
+            raise
+        token = create_token(user.email, user.id, token_type="access")
+        refresh_token = create_token(user.email, user.id, token_type="refresh")
+        status_code = 200
+        content = {
+            "access_token": token,
+            "refresh_token": refresh_token
+            }
+    except Exception as e:
+        print('e: ', e)
+        content = dict(message="no match user")
+        status_code = 400
     return JSONResponse(status_code=status_code, content=content)
 
 @app.post("/register/", response_model=ResponseUser)
