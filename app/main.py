@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.db import database, User, Mission, Board
 from app.auth import *
+from app.dummy import *
 
 from copy import deepcopy
 import datetime
@@ -35,6 +36,16 @@ ResponseMission = Mission.get_pydantic(exclude={"owner":...})
 RequestBoard = Board.get_pydantic(exclude={
     "id":..., "writer":..., "created_at":... ,"updated_at":...})
 ResponseBoard = Board.get_pydantic(exclude={"writer":...})
+
+@app.get("/dummy-user")
+async def read_root():
+    await create_dummy_user(3)
+    return True
+
+@app.get("/dummy-board")
+async def read_root():
+    await create_dummy_board(3)
+    return True
 
 @app.get("/")
 async def read_root():

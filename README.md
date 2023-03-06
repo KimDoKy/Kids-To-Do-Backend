@@ -23,3 +23,8 @@ $ docker volume prune
 ### api documentation
 
 - http://localhost:8000/docs
+
+### Create Dummy Data
+
+- /dummy-user/
+- /dummy-board/
