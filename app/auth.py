@@ -37,7 +37,7 @@ def create_token(username: str, user_id: int, expires_delta: timedelta = None, t
         expire_minues = ACCESS_TOKEN_EXPIRE_MINUTES
         secret_key = JWT_SECRET_KEY
     elif token_type == "refresh":
-        expire_minues = ACCESS_TOKEN_EXPIRE_MINUTES
+        expire_minues = REFRESH_TOKEN_EXPIRE_MINUTES
         secret_key = JWT_REFRESH_SECRET_KEY
 
     encode = {"sub": username, "id": user_id}
