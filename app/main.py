@@ -133,17 +133,20 @@ async def update_user_info(username: str = Form(...), token: str = Depends(oauth
 
 @app.put("/user/change-password/", response_model=ResponseUser)
 async def update_user_password(old_password: str = Form(...), new_password: str = Form(...), token: str = Depends(oauth2_bearer)):
+    status_code = 400
     try:
         user = await get_current_user(token)
         user = await authenticate_user(user.email, old_password)
         if not user:
-            raise HTTPException(status_code=400, detail="not matched password")
+            raise HTTPException(status_code=status_code, detail="not matched password")
         hashed_password = get_password_hash(new_password)
         data = {"password": hashed_password}
-        return await user.update(**data)
+        await user.update(**data)
+        status_code = 200
+        content = {'result': True}
     except Exception as e:
         content = {'message': e.detail}
-        return JSONResponse(status_code=400, content=content)
+    return JSONResponse(status_code=status_code, content=content)
 
 @app.delete("/user/")
 async def withdraw(password: str = Form(...), token: str = Depends(oauth2_bearer)):
@@ -152,9 +155,10 @@ async def withdraw(password: str = Form(...), token: str = Depends(oauth2_bearer
         user = await get_current_user(token)
         user = await authenticate_user(user.email, password)
         if not user:
-            raise HTTPException(status_code=400, detail="not matched password")
+            raise HTTPException(status_code=status_code, detail="not matched password")
+        await user.delete()
         status_code = 200
-        return await user.delete()
+        content = {'result': True}
     except NoMatch:
         content = {'message': 'No Match'}
     except Exception as e:
