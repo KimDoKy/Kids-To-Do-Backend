@@ -1,4 +1,5 @@
 from app.db import User, Board
+from app.auth import get_password_hash
 
 async def create_dummy_user(create_num):
     try:
@@ -7,7 +8,7 @@ async def create_dummy_user(create_num):
             data = {
                 "email": f"email-{i}@test.com",
                 "username": f"user-{i}",
-                "password": f"1q2w3e4r!@#"
+                "password": get_password_hash("1q2w3e4r!@#")
             }
             await User(**data).save()
     except Exception as e:

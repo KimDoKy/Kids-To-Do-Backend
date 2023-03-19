@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Form, HTTPException
 from fastapi.responses import JSONResponse
 from ormar.exceptions import NoMatch
 from starlette.middleware.cors import CORSMiddleware
@@ -78,7 +78,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             "refresh_token": refresh_token
             }
     except Exception as e:
-        print('e: ', e)
         content = dict(message="no match user")
     return JSONResponse(status_code=status_code, content=content)
 
@@ -96,7 +95,6 @@ async def refresh_jwt(token: str = Depends(oauth2_bearer)):
             "refresh_token": refresh_token
             }
     except Exception as e:
-        print('e: ', e)
         content = dict(message="no match user")
         status_code = 400
     return JSONResponse(status_code=status_code, content=content)
@@ -113,6 +111,55 @@ async def register(user: RequestUser):
         content = {'message': e.message}
         return JSONResponse(status_code=400, content=content)
     return user
+
+@app.get("/user/", response_model=ResponseUser)
+async def get_user_info(token: str = Depends(oauth2_bearer)):
+    try:
+        user = await get_current_user(token)
+    except Exception as e:
+        content = {'message': e.detail}
+        return JSONResponse(status_code=400, content=content)
+    return user
+
+@app.put("/user/update-info/", response_model=ResponseUser)
+async def update_user_info(username: str = Form(...), token: str = Depends(oauth2_bearer)):
+    try:
+        user = await get_current_user(token)
+        data = {'username': username}
+        return await user.update(**data)
+    except Exception as e:
+        content = {'message': e.detail}
+        return JSONResponse(status_code=400, content=content)
+
+@app.put("/user/change-password/", response_model=ResponseUser)
+async def update_user_password(old_password: str = Form(...), new_password: str = Form(...), token: str = Depends(oauth2_bearer)):
+    try:
+        user = await get_current_user(token)
+        user = await authenticate_user(user.email, old_password)
+        if not user:
+            raise HTTPException(status_code=400, detail="not matched password")
+        hashed_password = get_password_hash(new_password)
+        data = {"password": hashed_password}
+        return await user.update(**data)
+    except Exception as e:
+        content = {'message': e.detail}
+        return JSONResponse(status_code=400, content=content)
+
+@app.delete("/user/")
+async def withdraw(password: str = Form(...), token: str = Depends(oauth2_bearer)):
+    status_code = 400
+    try:
+        user = await get_current_user(token)
+        user = await authenticate_user(user.email, password)
+        if not user:
+            raise HTTPException(status_code=400, detail="not matched password")
+        status_code = 200
+        return await user.delete()
+    except NoMatch:
+        content = {'message': 'No Match'}
+    except Exception as e:
+        content = {'message': e.detail}
+    return JSONResponse(status_code=status_code, content=content)
 
 @app.get("/missions/", response_model=list[ResponseMission])
 async def get_mission_list(token: str = Depends(oauth2_bearer)):

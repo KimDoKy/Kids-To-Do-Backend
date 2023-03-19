@@ -32,7 +32,7 @@ class Mission(ormar.Model):
     title: str = ormar.String(max_length=128)
     comp_cur: int = ormar.Integer()
     comp_tot: int = ormar.Integer()
-    owner: int = ormar.ForeignKey(User)
+    owner: int = ormar.ForeignKey(User, ondelete='CASCADE')
 
 
 class Board(ormar.Model):
@@ -42,7 +42,7 @@ class Board(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     title: str = ormar.String(max_length=128)
     content: str = ormar.String(max_length=256)
-    writer: int = ormar.ForeignKey(User)
+    writer: int = ormar.ForeignKey(User, ondelete='CASCADE')
     created_at: datetime.datetime = ormar.DateTime(
         default=datetime.datetime.now(), name="created_at"
     )
